@@ -1,29 +1,33 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta name='viewport' content='width=device-width, target-densitydpi=device-dpi, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no' />
-    </head>
-    
-    <body>
-        <div id="content">webview</div>
-<script>
-function getUserInfoSync() {
-    // 确保 HeytapJsApi 和 getUserInfoSync 存在
-    if (window.HeytapJsApi && typeof window.HeytapJsApi.getUserInfoSync === 'function') {
-        // 获取用户信息
-        const userInfo = window.HeytapJsApi.getUserInfoSync();
-        // 使用 JSON.stringify 将对象转换为字符串，便于显示
-        alert(JSON.stringify(userInfo));
-    } else {
-        alert("HeytapJsApi 或 getUserInfoSync 方法不可用。");
-    }
-}
 
-// 确保 DOM 加载完成后调用
-document.addEventListener("DOMContentLoaded", function() {
-    getUserInfoSync();
-});
-</script>
-    </body>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name='viewport'
+        content='width=device-width, target-densitydpi=device-dpi, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+</head>
+
+<body>
+    <div id="content">webview</div>
+    <script>
+        function getUserInfoSync() {
+            // 确保 HeytapJsApi 和 getUserInfoSync 存在
+            if (window.HeytapJsApi && typeof window.HeytapJsApi.getUserInfoSync === 'function') {
+                // 获取用户信息
+                const userInfo = window.HeytapJsApi.getUserInfoSync();
+                // 使用 JSON.stringify 将对象转换为字符串，便于显示
+                alert(JSON.stringify(userInfo));
+            } else {
+                alert("HeytapJsApi 或 getUserInfoSync 方法不可用。");
+            }
+        }
+
+        // 确保 DOM 加载完成后调用
+        document.addEventListener("DOMContentLoaded", function () {
+            getUserInfoSync();
+        });
+    </script>
+
+</body>
+
 </html>
