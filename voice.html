@@ -10,21 +10,25 @@
 <body>
     <div id="content">webview</div>
     <script>
-        function getUserInfoSync() {
-            // 确保 HeytapJsApi 和 getUserInfoSync 存在
-            if (window.HeytapJsApi && typeof window.HeytapJsApi.getUserInfoSync === 'function') {
-                // 获取用户信息
-                const userInfo = window.HeytapJsApi.getUserInfoSync();
-                // 使用 JSON.stringify 将对象转换为字符串，便于显示
-                alert(JSON.stringify(userInfo));
-            } else {
-                alert("HeytapJsApi 或 getUserInfoSync 方法不可用。");
+        function getUserInfo() {
+            // 防御性检查 + 错误处理
+            try {
+                if (window.HeytapJsApi && typeof window.HeytapJsApi.getUserInfoSync === 'function') {
+                    const userInfo = window.HeytapJsApi.getUserInfoSync();
+                    console.log("用户信息:", userInfo);
+                    alert(JSON.stringify(userInfo));
+                } else {
+                    console.warn("接口未就绪，延迟重试...");
+                    setTimeout(getUserInfo, 500); // 延迟重试
+                }
+            } catch (error) {
+                alert("调用失败: " + error.message);
             }
         }
 
-        // 确保 DOM 加载完成后调用
+        // 启动检查
         document.addEventListener("DOMContentLoaded", function () {
-            getUserInfoSync();
+            getUserInfo();
         });
     </script>
 
