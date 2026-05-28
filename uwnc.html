@@ -2,42 +2,73 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>UWNC GetLoginUserInfo POC</title>
+  <title>UWNC Demo (Dump All)</title>
   <style>
     body { font-family: monospace; padding: 12px; }
-    button { padding: 10px 14px; }
+    button { padding: 10px 14px; margin-right: 8px; }
     pre { white-space: pre-wrap; word-break: break-word; background: #111; color: #0f0; padding: 12px; }
   </style>
 </head>
 <body>
-  <h3>UWNC.callAndroid → GetLoginUserInfo</h3>
-  <button onclick="callGetLoginUserInfo()">Call GetLoginUserInfo</button>
+  <h3>UWNC.callAndroid / UWNC.callH5 (Dump All)</h3>
+
+  <button onclick="callGetLoginUserInfo()">GetLoginUserInfo</button>
+  <button onclick="clearLog()">Clear</button>
+
   <pre id="log"></pre>
 
   <script>
     const logEl = document.getElementById('log');
     function log(msg) { logEl.textContent += msg + "\n"; }
+    function clearLog() { logEl.textContent = ""; }
 
-    // 不要覆盖 UWNC（如果注入存在就复用）
+    // 不覆盖 Android 注入的 UWNC 对象
     if (!window.UWNC) window.UWNC = {};
 
-    // Android 会执行：javascript:UWNC.callH5(<NativeBean JSON>)
+    // Android -> H5 回调入口：javascript:UWNC.callH5(<NativeBean JSON>)
     window.UWNC.callH5 = function (nativeBean) {
-      log("[callH5] nativeBean=");
-      log(JSON.stringify(nativeBean, null, 2));
-
-      // NativeBean 字段：wcmd / wparams / callbackNcmd
-      if (nativeBean && nativeBean.wcmd === "cb_GetLoginUserInfo") {
-        log("[GetLoginUserInfo] wparams=");
-        try {
-          log(JSON.stringify(JSON.parse(nativeBean.wparams), null, 2));
-        } catch (e) {
-          log(String(nativeBean.wparams));
-        }
+      log("========== UWNC.callH5 ==========");
+      log("[meta] typeof nativeBean = " + (typeof nativeBean));
+      try {
+        log("[raw] " + JSON.stringify(nativeBean));
+      } catch (e) {
+        log("[raw] <JSON.stringify failed> " + String(nativeBean));
       }
+
+      // 打印字段（NativeBean: wcmd / wparams / callbackNcmd）
+      try {
+        log("[field] wcmd=" + String(nativeBean && nativeBean.wcmd));
+        log("[field] callbackNcmd=" + String(nativeBean && nativeBean.callbackNcmd));
+        log("[field] wparams(type)=" + (nativeBean && typeof nativeBean.wparams));
+        log("[field] wparams(len)=" + (nativeBean && nativeBean.wparams ? String(nativeBean.wparams.length) : "null"));
+      } catch (e) {
+        log("[field] <read fields failed> " + String(e));
+      }
+
+      // 尝试把 wparams 当 JSON 再解析一遍（不管成败都打印）
+      try {
+        const wp = nativeBean && nativeBean.wparams;
+        log("[wparams-raw] " + String(wp));
+        if (typeof wp === "string") {
+          try {
+            const obj = JSON.parse(wp);
+            log("[wparams-json] " + JSON.stringify(obj, null, 2));
+          } catch (e) {
+            log("[wparams-json] <parse failed> " + String(e));
+          }
+        }
+      } catch (e) {
+        log("[wparams] <dump failed> " + String(e));
+      }
+
+      log("========== /UWNC.callH5 ==========\n");
     };
 
     function callGetLoginUserInfo() {
+      log("========== SEND GetLoginUserInfo ==========");
+      log("[meta] typeof UWNC = " + typeof window.UWNC);
+      log("[meta] typeof UWNC.callAndroid = " + typeof (window.UWNC && window.UWNC.callAndroid));
+
       const payload = {
         ncmd: "GetLoginUserInfo",
         callbackWcmd: "cb_GetLoginUserInfo",
@@ -45,13 +76,22 @@
       };
 
       const json = JSON.stringify(payload);
-      log("[send] " + json);
+      log("[payload] " + json);
 
       if (!window.UWNC || typeof window.UWNC.callAndroid !== "function") {
-        log("[error] UWNC.callAndroid not found (must run inside BPWebView/UWNCWebActivity).");
+        log("[error] UWNC.callAndroid not found. Must open inside BPWebView/UWNCWebActivity.");
+        log("========== /SEND ==========\n");
         return;
       }
-      window.UWNC.callAndroid(json);
+
+      try {
+        window.UWNC.callAndroid(json);
+        log("[send] OK");
+      } catch (e) {
+        log("[send] FAILED: " + String(e));
+      }
+
+      log("========== /SEND ==========\n");
     }
   </script>
 </body>
