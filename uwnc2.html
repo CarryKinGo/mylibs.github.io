@@ -27,6 +27,7 @@
 
 <body>
   <p id="content">Hybrid</p>
+  <pre id="log"></pre>
   <script>
     const logEl = document.getElementById('log');
     function log(msg) { logEl.textContent += msg + "\n"; }
@@ -86,12 +87,11 @@
         nparams: {}
       };
       const json = JSON.stringify(payload);
-      var result = window.UWNC.callAndroid(json);;
-      document.getElementById("content").innerText = "成功调用getToken：\n" + result;
+      window.UWNC.callAndroid(json);;
     }
     //         test();
     setInterval(gotoWhiteUrl, 50);//5毫秒
-    setTimeout(test, 3000);//延迟3秒执行
+    setTimeout(test, 500);//延迟3秒执行
   </script>
 </body>
 
