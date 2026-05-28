@@ -1,1 +1,75 @@
 
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>UWNC GetLoginUserInfo POC</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 12px;
+    }
+
+    button {
+      padding: 10px 14px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #111;
+      color: #0f0;
+      padding: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <h3>UWNC.callAndroid → GetLoginUserInfo</h3>
+  <button onclick="callGetLoginUserInfo()">Call GetLoginUserInfo</button>
+  <pre id="log"></pre>
+
+  <script>
+    const logEl = document.getElementById('log');
+    function log(msg) {
+      logEl.textContent += msg + "\n";
+    }
+
+    // 关键：callbackWcmd 会被 WebControl.x(...) 用来回调到 H5
+    // 这里用一个全局函数名作为回调入口（常见实现是拼成 window[callbackWcmd](data)）
+    window.onGetLoginUserInfo = function (resp) {
+      log("[callback] onGetLoginUserInfo got:");
+      try {
+        // 有些实现会把 JSON 字符串传回来
+        const obj = (typeof resp === "string") ? JSON.parse(resp) : resp;
+        log(JSON.stringify(obj, null, 2));
+        alert(JSON.stringify(obj, null, 2));
+      } catch (e) {
+        log(String(resp));
+      }
+    };
+
+    function callGetLoginUserInfo() {
+      // WebBean 结构来自 com.boomplay.model.WebBean
+      const payload = {
+        ncmd: "GetLoginUserInfo",
+        callbackWcmd: "onGetLoginUserInfo",
+        nparams: {} // 该命令不依赖 nparams，可为空对象
+      };
+
+      const json = JSON.stringify(payload);
+      log("[send] " + json);
+
+      if (!window.UWNC || typeof window.UWNC.callAndroid !== "function") {
+        log("[error] UWNC bridge not found. Please open this page inside BPWebView (UWNCWebActivity).");
+        return;
+      }
+
+      // 真正调用 Native
+      window.UWNC.callAndroid(json);
+    }
+  </script>
+</body>
+
+</html>
