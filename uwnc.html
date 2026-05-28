@@ -18,26 +18,22 @@
     const logEl = document.getElementById('log');
     function log(msg) { logEl.textContent += msg + "\n"; }
 
-    // 关键：Android 会执行 javascript:UWNC.callH5(<NativeBean JSON>)
-    // 所以 H5 必须实现 UWNC.callH5
-    window.UWNC = window.UWNC || {};
+    // 不要覆盖 UWNC（如果注入存在就复用）
+    if (!window.UWNC) window.UWNC = {};
 
-    UWNC.callH5 = function (nativeBean) {
-      // nativeBean 可能是对象，也可能是 JSON 字符串（取决于 loadUrl 拼接后的解析方式）
-      let obj = nativeBean;
-      try { if (typeof nativeBean === "string") obj = JSON.parse(nativeBean); } catch (e) {}
+    // Android 会执行：javascript:UWNC.callH5(<NativeBean JSON>)
+    window.UWNC.callH5 = function (nativeBean) {
+      log("[callH5] nativeBean=");
+      log(JSON.stringify(nativeBean, null, 2));
 
-      log("[callH5] raw:");
-      log(JSON.stringify(obj, null, 2));
-
-      // NativeBean: { wcmd, wparams, callbackNcmd }
-      const wcmd = obj && obj.wcmd;
-      const wparams = obj && obj.wparams;
-
-      if (wcmd === "cb_GetLoginUserInfo") {
-        log("[GetLoginUserInfo] wparams:");
-        try { log(JSON.stringify(JSON.parse(wparams), null, 2)); }
-        catch (e) { log(String(wparams)); }
+      // NativeBean 字段：wcmd / wparams / callbackNcmd
+      if (nativeBean && nativeBean.wcmd === "cb_GetLoginUserInfo") {
+        log("[GetLoginUserInfo] wparams=");
+        try {
+          log(JSON.stringify(JSON.parse(nativeBean.wparams), null, 2));
+        } catch (e) {
+          log(String(nativeBean.wparams));
+        }
       }
     };
 
@@ -47,14 +43,15 @@
         callbackWcmd: "cb_GetLoginUserInfo",
         nparams: {}
       };
+
       const json = JSON.stringify(payload);
       log("[send] " + json);
 
-      if (!UWNC.callAndroid || typeof UWNC.callAndroid !== "function") {
-        log("[error] UWNC.callAndroid not found. Must run inside BPWebView (UWNCWebActivity).");
+      if (!window.UWNC || typeof window.UWNC.callAndroid !== "function") {
+        log("[error] UWNC.callAndroid not found (must run inside BPWebView/UWNCWebActivity).");
         return;
       }
-      UWNC.callAndroid(json);
+      window.UWNC.callAndroid(json);
     }
   </script>
 </body>
